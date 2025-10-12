@@ -10,6 +10,7 @@ import PomodoroTimer from "@/components/dashboard/PomodoroTimer";
 import TaskList from "@/components/dashboard/TaskList";
 import Analytics from "@/components/dashboard/Analytics";
 import DailyQuests from "@/components/dashboard/DailyQuests";
+import AIChatbot from "@/components/dashboard/AIChatbot";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -95,6 +96,11 @@ const Dashboard = () => {
           <div>
             <Analytics userId={user?.id || ""} />
           </div>
+        </div>
+
+        {/* AI Chatbot */}
+        <div className="max-w-4xl mx-auto">
+          <AIChatbot />
         </div>
       </main>
     </div>

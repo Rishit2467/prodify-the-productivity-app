@@ -76,6 +76,13 @@ const TaskList = ({ userId }: { userId: string }) => {
   };
 
   const handleToggleTask = async (taskId: string, completed: boolean) => {
+    // Optimistically update UI
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, completed: !completed, completed_at: !completed ? new Date().toISOString() : null }
+        : task
+    ));
+
     const { error } = await supabase
       .from("tasks")
       .update({
@@ -85,6 +92,12 @@ const TaskList = ({ userId }: { userId: string }) => {
       .eq("id", taskId);
 
     if (error) {
+      // Revert optimistic update on error
+      setTasks(tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, completed: completed, completed_at: completed ? new Date().toISOString() : null }
+          : task
+      ));
       toast.error("Failed to update task");
       return;
     }
