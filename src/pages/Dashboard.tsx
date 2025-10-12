@@ -100,7 +100,7 @@ const Dashboard = () => {
 
         {/* AI Chatbot */}
         <div className="max-w-4xl mx-auto">
-          <AIChatbot />
+          <AIChatbot userId={user?.id || ""} />
         </div>
       </main>
     </div>

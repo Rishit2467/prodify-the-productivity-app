@@ -3,19 +3,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Send, Bot, User, Plus, ListChecks, Workflow } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Message {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
-const AIChatbot = () => {
+interface Subtask {
+  title: string;
+  description?: string;
+  priority: string;
+  estimated_time?: number;
+}
+
+const AIChatbot = ({ userId }: { userId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<"chat" | "create_task" | "prioritize" | "decompose">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +43,11 @@ const AIChatbot = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("chat", {
-        body: { messages: [...messages, userMessage] },
+        body: { 
+          messages: [...messages, userMessage],
+          type: mode,
+          userId 
+        },
       });
 
       if (error) {
@@ -49,11 +62,44 @@ const AIChatbot = () => {
         return;
       }
 
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: data.choices[0].message.content,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Handle task creation response
+      if (data.success && mode === "create_task") {
+        toast.success(data.message);
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: `✅ Task created: **${data.task.title}**\n${data.task.description ? `\nDescription: ${data.task.description}` : ""}\nPriority: ${data.task.priority || "medium"}${data.task.due_date ? `\nDue: ${new Date(data.task.due_date).toLocaleString()}` : ""}`,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setMode("chat");
+      } 
+      // Handle task decomposition response
+      else if (data.success && mode === "decompose") {
+        const subtasksList = data.subtasks.map((st: Subtask, i: number) => 
+          `${i + 1}. **${st.title}**${st.description ? `\n   ${st.description}` : ""}${st.estimated_time ? `\n   ⏱️ ${st.estimated_time} mins` : ""}`
+        ).join("\n\n");
+        
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: `🔨 Task Breakdown:\n\n${subtasksList}\n\n${data.explanation || ""}`,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Offer to create these subtasks
+        const offerMessage: Message = {
+          role: "system",
+          content: "Would you like me to add these as separate tasks? (Reply 'yes' to create them)",
+        };
+        setMessages((prev) => [...prev, offerMessage]);
+        setMode("chat");
+      }
+      // Handle regular chat response
+      else if (data.choices) {
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: data.choices[0].message.content,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -62,21 +108,86 @@ const AIChatbot = () => {
     }
   };
 
+  const handleQuickAction = (action: "create_task" | "prioritize" | "decompose") => {
+    setMode(action);
+    let systemMessage = "";
+    
+    if (action === "create_task") {
+      systemMessage = "📝 Tell me what task you'd like to add. You can include details like due date, priority, and category.";
+    } else if (action === "prioritize") {
+      systemMessage = "🎯 Let me analyze your tasks and suggest what you should work on next...";
+      // Auto-send for prioritization
+      setTimeout(() => {
+        handleSend();
+      }, 100);
+    } else if (action === "decompose") {
+      systemMessage = "🔨 Tell me about the large task you want to break down into smaller steps.";
+    }
+    
+    if (systemMessage) {
+      setMessages((prev) => [...prev, { role: "system", content: systemMessage }]);
+    }
+  };
+
   return (
     <Card className="border-primary/20 h-[600px] flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5" />
-          AI Assistant
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            AI Task Assistant
+          </CardTitle>
+          {mode !== "chat" && (
+            <Badge variant="secondary">{mode.replace("_", " ")}</Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+        {/* Quick Actions */}
+        {messages.length === 0 && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAction("create_task")}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Task
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAction("prioritize")}
+              className="flex items-center gap-2"
+            >
+              <ListChecks className="h-4 w-4" />
+              What's Next?
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAction("decompose")}
+              className="flex items-center gap-2"
+            >
+              <Workflow className="h-4 w-4" />
+              Break Down Task
+            </Button>
+          </div>
+        )}
+
         <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Hi! I'm your productivity assistant. Ask me anything about time management, study tips, or task planning!</p>
+                <p className="mb-4">Hi! I'm your AI task assistant.</p>
+                <p className="text-sm">I can help you:</p>
+                <ul className="text-sm mt-2 space-y-1">
+                  <li>📝 Create tasks from natural language</li>
+                  <li>🎯 Prioritize what to work on next</li>
+                  <li>🔨 Break down complex tasks</li>
+                </ul>
               </div>
             ) : (
               messages.map((message, index) => (
@@ -86,7 +197,7 @@ const AIChatbot = () => {
                     message.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {message.role === "assistant" && (
+                  {(message.role === "assistant" || message.role === "system") && (
                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
@@ -95,6 +206,8 @@ const AIChatbot = () => {
                     className={`rounded-lg px-4 py-2 max-w-[80%] ${
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
+                        : message.role === "system"
+                        ? "bg-accent"
                         : "bg-secondary"
                     }`}
                   >
@@ -120,17 +233,35 @@ const AIChatbot = () => {
             )}
           </div>
         </ScrollArea>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Ask me anything..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            disabled={isLoading}
-          />
-          <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
+        <div className="space-y-2">
+          {mode !== "chat" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMode("chat")}
+              className="text-xs"
+            >
+              Cancel {mode.replace("_", " ")}
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Input
+              placeholder={
+                mode === "create_task"
+                  ? "Describe your task..."
+                  : mode === "decompose"
+                  ? "Describe the task to break down..."
+                  : "Ask me anything..."
+              }
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              disabled={isLoading}
+            />
+            <Button onClick={handleSend} disabled={isLoading || !input.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
