@@ -77,24 +77,6 @@ const Auth = () => {
           <p className="text-xl text-muted-foreground">
             Transform your productivity into an epic adventure. Earn XP, complete quests, and build unstoppable focus streaks.
           </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8">
-            <div className="flex flex-col items-center gap-2 p-4 bg-card/50 backdrop-blur rounded-lg border border-border">
-              <Trophy className="h-8 w-8 text-accent" />
-              <div className="text-2xl font-bold">1000+</div>
-              <div className="text-sm text-muted-foreground">Active Users</div>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-card/50 backdrop-blur rounded-lg border border-border">
-              <Target className="h-8 w-8 text-primary" />
-              <div className="text-2xl font-bold">50k+</div>
-              <div className="text-sm text-muted-foreground">Tasks Completed</div>
-            </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-card/50 backdrop-blur rounded-lg border border-border">
-              <Zap className="h-8 w-8 text-success" />
-              <div className="text-2xl font-bold">95%</div>
-              <div className="text-sm text-muted-foreground">User Satisfaction</div>
-            </div>
-          </div>
         </div>
 
         {/* Auth Form */}

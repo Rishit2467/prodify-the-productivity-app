@@ -58,7 +58,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -77,32 +77,39 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Stats Overview */}
-        <StatsOverview userId={user?.id || ""} />
+      {/* Main Layout with Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 py-6 space-y-6">
+            {/* Stats Overview */}
+            <StatsOverview userId={user?.id || ""} />
 
-        {/* Pomodoro Timer & Daily Quests */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          <PomodoroTimer userId={user?.id || ""} />
-          <DailyQuests userId={user?.id || ""} />
-        </div>
+            {/* Pomodoro Timer & Daily Quests */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              <PomodoroTimer userId={user?.id || ""} />
+              <DailyQuests userId={user?.id || ""} />
+            </div>
 
-        {/* Task List & Analytics */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <TaskList userId={user?.id || ""} />
+            {/* Task List & Analytics */}
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <TaskList userId={user?.id || ""} />
+              </div>
+              <div>
+                <Analytics userId={user?.id || ""} />
+              </div>
+            </div>
           </div>
-          <div>
-            <Analytics userId={user?.id || ""} />
-          </div>
-        </div>
+        </main>
 
-        {/* AI Chatbot */}
-        <div className="max-w-4xl mx-auto">
-          <AIChatbot userId={user?.id || ""} />
-        </div>
-      </main>
+        {/* AI Chatbot Sidebar */}
+        <aside className="w-96 border-l border-border bg-card/30 backdrop-blur flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            <AIChatbot userId={user?.id || ""} />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };
