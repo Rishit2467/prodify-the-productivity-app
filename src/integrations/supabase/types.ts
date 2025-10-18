@@ -61,6 +61,54 @@ export type Database = {
           },
         ]
       }
+      friend_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          created_at: string | null
+          friend_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          friend_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          friend_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pomodoro_sessions: {
         Row: {
           completed: boolean
@@ -130,6 +178,103 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      study_session_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_session_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_session_participants: {
+        Row: {
+          id: string
+          is_active: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "study_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_sessions: {
+        Row: {
+          created_at: string | null
+          ended_at: string | null
+          host_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          started_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          started_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          started_at?: string | null
         }
         Relationships: []
       }
