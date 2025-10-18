@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { Play, Pause, RotateCcw, Coffee } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const PomodoroTimer = ({ userId }: { userId: string }) => {
+  const [focusTime, setFocusTime] = useState(25);
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -86,7 +89,7 @@ const PomodoroTimer = ({ userId }: { userId: string }) => {
               xp: newXp,
               level: newLevel,
               gems: currentStats.gems + 5,
-              total_focus_time: currentStats.total_focus_time + 25,
+              total_focus_time: currentStats.total_focus_time + focusTime,
               current_streak: newStreak,
               last_activity_date: today,
             })
@@ -99,7 +102,7 @@ const PomodoroTimer = ({ userId }: { userId: string }) => {
 
     // Switch between work and break
     if (isBreak) {
-      setMinutes(25);
+      setMinutes(focusTime);
       setIsBreak(false);
       toast.success("Break over! Ready for another session?");
     } else {
@@ -117,7 +120,7 @@ const PomodoroTimer = ({ userId }: { userId: string }) => {
         .from("pomodoro_sessions")
         .insert({
           user_id: userId,
-          duration: 25,
+          duration: focusTime,
           started_at: new Date().toISOString(),
         })
         .select()
@@ -139,13 +142,13 @@ const PomodoroTimer = ({ userId }: { userId: string }) => {
 
   const handleReset = () => {
     setIsActive(false);
-    setMinutes(isBreak ? 5 : 25);
+    setMinutes(isBreak ? 5 : focusTime);
     setSeconds(0);
   };
 
   const progress = isBreak 
     ? ((5 - minutes) * 60 + (60 - seconds)) / 300 * 100
-    : ((25 - minutes) * 60 + (60 - seconds)) / 1500 * 100;
+    : ((focusTime - minutes) * 60 + (60 - seconds)) / (focusTime * 60) * 100;
 
   return (
     <Card className="border-primary/20 shadow-glow">
@@ -165,6 +168,23 @@ const PomodoroTimer = ({ userId }: { userId: string }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {!isActive && !isBreak && (
+          <div className="space-y-2">
+            <Label htmlFor="focus-time">Focus Time: {focusTime} minutes</Label>
+            <Slider
+              id="focus-time"
+              min={5}
+              max={60}
+              step={5}
+              value={[focusTime]}
+              onValueChange={(value) => {
+                setFocusTime(value[0]);
+                setMinutes(value[0]);
+              }}
+            />
+          </div>
+        )}
+        
         <div className="relative">
           <svg className="w-full h-64" viewBox="0 0 200 200">
             {/* Background circle */}
