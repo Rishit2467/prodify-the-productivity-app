@@ -11,6 +11,9 @@ import TaskList from "@/components/dashboard/TaskList";
 import Analytics from "@/components/dashboard/Analytics";
 import DailyQuests from "@/components/dashboard/DailyQuests";
 import AIChatbot from "@/components/dashboard/AIChatbot";
+import FriendsPanel from "@/components/friends/FriendsPanel";
+import StudySession from "@/components/friends/StudySession";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -103,11 +106,27 @@ const Dashboard = () => {
           </div>
         </main>
 
-        {/* AI Chatbot Sidebar */}
+        {/* Right Sidebar with Tabs */}
         <aside className="w-96 border-l border-border bg-card/30 backdrop-blur flex flex-col">
-          <div className="flex-1 overflow-hidden">
-            <AIChatbot userId={user?.id || ""} />
-          </div>
+          <Tabs defaultValue="ai" className="flex-1 flex flex-col">
+            <TabsList className="m-4">
+              <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+              <TabsTrigger value="friends">Friends</TabsTrigger>
+              <TabsTrigger value="study">Study Together</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="ai" className="flex-1 mt-0 overflow-hidden">
+              <AIChatbot userId={user?.id || ""} />
+            </TabsContent>
+            
+            <TabsContent value="friends" className="flex-1 mt-0 overflow-hidden">
+              <FriendsPanel userId={user?.id || ""} />
+            </TabsContent>
+            
+            <TabsContent value="study" className="flex-1 mt-0 overflow-hidden">
+              <StudySession userId={user?.id || ""} />
+            </TabsContent>
+          </Tabs>
         </aside>
       </div>
     </div>
