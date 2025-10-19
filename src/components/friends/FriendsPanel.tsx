@@ -152,6 +152,31 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
         return;
       }
 
+      // Check if already friends
+      const { data: existingFriendship } = await supabase
+        .from('friendships')
+        .select('id')
+        .or(`and(user_id.eq.${userId},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${userId})`)
+        .maybeSingle();
+
+      if (existingFriendship) {
+        toast.error("You are already friends with this user");
+        return;
+      }
+
+      // Check for existing pending requests (both directions)
+      const { data: existingRequest } = await supabase
+        .from('friend_requests')
+        .select('id')
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${profile.id}),and(sender_id.eq.${profile.id},receiver_id.eq.${userId})`)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (existingRequest) {
+        toast.error("A friend request already exists between you and this user");
+        return;
+      }
+
       // Send friend request
       const { error } = await supabase
         .from('friend_requests')
@@ -162,11 +187,8 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
         });
 
       if (error) {
-        if (error.code === '23505') {
-          toast.error("Friend request already sent");
-        } else {
-          toast.error("Failed to send friend request");
-        }
+        toast.error("Failed to send friend request");
+        console.error(error);
       } else {
         toast.success(`Friend request sent to ${username}`);
         setUsername("");
