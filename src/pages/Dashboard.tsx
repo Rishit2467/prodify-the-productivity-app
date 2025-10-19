@@ -13,6 +13,7 @@ import DailyQuests from "@/components/dashboard/DailyQuests";
 import AIChatbot from "@/components/dashboard/AIChatbot";
 import FriendsPanel from "@/components/friends/FriendsPanel";
 import StudySession from "@/components/friends/StudySession";
+import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
@@ -109,10 +110,11 @@ const Dashboard = () => {
         {/* Right Sidebar with Tabs */}
         <aside className="w-96 border-l border-border bg-card/30 backdrop-blur flex flex-col">
           <Tabs defaultValue="ai" className="flex-1 flex flex-col">
-            <TabsList className="m-4">
-              <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+            <TabsList className="m-4 grid grid-cols-4">
+              <TabsTrigger value="ai">AI</TabsTrigger>
               <TabsTrigger value="friends">Friends</TabsTrigger>
-              <TabsTrigger value="study">Study Together</TabsTrigger>
+              <TabsTrigger value="study">Study</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ai" className="flex-1 mt-0 overflow-hidden">
@@ -125,6 +127,10 @@ const Dashboard = () => {
             
             <TabsContent value="study" className="flex-1 mt-0 overflow-hidden">
               <StudySession userId={user?.id || ""} />
+            </TabsContent>
+            
+            <TabsContent value="profile" className="flex-1 mt-0 overflow-hidden">
+              <ProfileSettings userId={user?.id || ""} />
             </TabsContent>
           </Tabs>
         </aside>

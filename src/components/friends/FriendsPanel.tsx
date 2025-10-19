@@ -140,9 +140,15 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
         .from('profiles')
         .select('id')
         .eq('username', username.trim())
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profile) {
+      if (profileError) {
+        toast.error("Error searching for user");
+        console.error(profileError);
+        return;
+      }
+
+      if (!profile) {
         toast.error("User not found");
         return;
       }
