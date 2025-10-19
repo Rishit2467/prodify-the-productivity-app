@@ -21,7 +21,7 @@ const DailyQuests = ({ userId }: { userId: string }) => {
   useEffect(() => {
     initializeDailyQuests();
 
-    const channel = supabase
+    const questsChannel = supabase
       .channel("quests_changes")
       .on(
         "postgres_changes",
@@ -33,12 +33,31 @@ const DailyQuests = ({ userId }: { userId: string }) => {
         },
         () => {
           fetchQuests();
+          autoCompleteQuests();
         }
       )
       .subscribe();
 
+    const autoChannel = supabase
+      .channel("quests_auto")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${userId}` },
+        () => autoCompleteQuests()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pomodoro_sessions", filter: `user_id=eq.${userId}` },
+        () => autoCompleteQuests()
+      )
+      .subscribe();
+
+    // Initial auto check
+    autoCompleteQuests();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(questsChannel);
+      supabase.removeChannel(autoChannel);
     };
   }, [userId]);
 
@@ -105,6 +124,67 @@ const DailyQuests = ({ userId }: { userId: string }) => {
     setQuests(data || []);
   };
 
+  const autoCompleteQuests = async () => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    const todayStr = now.toISOString().split("T")[0];
+
+    const { data: todayQuests } = await supabase
+      .from("daily_quests")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("quest_date", todayStr);
+
+    if (!todayQuests || todayQuests.length === 0) return;
+
+    const { data: completedTasks } = await supabase
+      .from("tasks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("completed", true)
+      .gte("completed_at", start.toISOString())
+      .lte("completed_at", end.toISOString());
+
+    const taskCount = completedTasks?.length || 0;
+
+    const { data: completedSessions } = await supabase
+      .from("pomodoro_sessions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("completed", true)
+      .gte("ended_at", start.toISOString())
+      .lte("ended_at", end.toISOString());
+
+    const sessionCount = completedSessions?.length || 0;
+
+    const { data: stats } = await supabase
+      .from("user_stats")
+      .select("last_activity_date")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const streakActive = stats?.last_activity_date === todayStr || taskCount > 0 || sessionCount > 0;
+
+    const updates: Promise<any>[] = [];
+    for (const q of todayQuests) {
+      if (q.completed) continue;
+      if (q.title.includes("Complete 3 Tasks") && taskCount >= 3) {
+        updates.push(handleCompleteQuest(q.id, q.xp_reward, q.gem_reward));
+      } else if (q.title.includes("Focus for 50 Minutes") && sessionCount >= 2) {
+        updates.push(handleCompleteQuest(q.id, q.xp_reward, q.gem_reward));
+      } else if (q.title.includes("Maintain Your Streak") && streakActive) {
+        updates.push(handleCompleteQuest(q.id, q.xp_reward, q.gem_reward));
+      }
+    }
+
+    if (updates.length) {
+      await Promise.all(updates);
+    }
+  };
+
   const handleCompleteQuest = async (questId: string, xpReward: number, gemReward: number) => {
     const { error } = await supabase
       .from("daily_quests")
@@ -160,10 +240,7 @@ const DailyQuests = ({ userId }: { userId: string }) => {
             <div className="flex items-start gap-3">
               <Checkbox
                 checked={quest.completed}
-                onCheckedChange={() =>
-                  !quest.completed && handleCompleteQuest(quest.id, quest.xp_reward, quest.gem_reward)
-                }
-                disabled={quest.completed}
+                disabled
               />
               <div className="flex-1">
                 <div
