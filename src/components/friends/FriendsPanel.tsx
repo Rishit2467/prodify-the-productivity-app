@@ -135,25 +135,23 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
     
     setLoading(true);
     try {
-      // Find user by username
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username.trim())
-        .maybeSingle();
+      // Resolve user id by username via secure RPC (bypasses RLS safely)
+      const { data: targetId, error: rpcError } = await supabase.rpc('get_user_id_by_username', {
+        p_username: username.trim(),
+      });
 
-      if (profileError) {
+      if (rpcError) {
         toast.error("Error searching for user");
-        console.error(profileError);
+        console.error(rpcError);
         return;
       }
 
-      if (!profile) {
+      if (!targetId) {
         toast.error("User not found");
         return;
       }
 
-      if (profile.id === userId) {
+      if (targetId === userId) {
         toast.error("You cannot add yourself as a friend");
         return;
       }
@@ -162,7 +160,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
       const { data: existingFriendship } = await supabase
         .from('friendships')
         .select('id')
-        .or(`and(user_id.eq.${userId},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${userId})`)
+        .or(`and(user_id.eq.${userId},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${userId})`)
         .maybeSingle();
 
       if (existingFriendship) {
@@ -174,7 +172,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
       const { data: existingRequest } = await supabase
         .from('friend_requests')
         .select('id')
-        .or(`and(sender_id.eq.${userId},receiver_id.eq.${profile.id}),and(sender_id.eq.${profile.id},receiver_id.eq.${userId})`)
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${targetId}),and(sender_id.eq.${targetId},receiver_id.eq.${userId})`)
         .eq('status', 'pending')
         .maybeSingle();
 
@@ -188,7 +186,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
         .from('friend_requests')
         .insert({
           sender_id: userId,
-          receiver_id: profile.id,
+          receiver_id: targetId as string,
           status: 'pending'
         });
 
