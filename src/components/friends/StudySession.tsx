@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Video, MessageSquare, LogOut, Send, Users } from "lucide-react";
+import { Video, MessageSquare, LogOut, Send, Users, UserPlus, VideoOff } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -42,7 +42,10 @@ const StudySession = ({ userId }: StudySessionProps) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<string>("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const videoFrameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     checkActiveSession();
@@ -190,7 +193,17 @@ const StudySession = ({ userId }: StudySessionProps) => {
 
     if (!error) {
       toast.success("Friend invited to session!");
+    } else {
+      toast.error("Failed to invite friend");
     }
+  };
+
+  const handleInviteFriend = async () => {
+    if (!selectedFriend || !activeSession) return;
+    
+    await inviteFriendToSession(activeSession, selectedFriend);
+    setSelectedFriend("");
+    setShowInviteDialog(false);
   };
 
   const leaveSession = async () => {
@@ -345,10 +358,50 @@ const StudySession = ({ userId }: StudySessionProps) => {
             </span>
           </div>
         </div>
-        <Button variant="destructive" size="sm" onClick={leaveSession}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Leave
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowVideoCall(!showVideoCall)}
+          >
+            {showVideoCall ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+          </Button>
+          
+          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invite Friend</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Select value={selectedFriend} onValueChange={setSelectedFriend}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a friend" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {friends.map((friend) => (
+                      <SelectItem key={friend.id} value={friend.id}>
+                        {friend.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleInviteFriend} className="w-full" disabled={!selectedFriend}>
+                  Send Invite
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button variant="destructive" size="sm" onClick={leaveSession}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Leave
+          </Button>
+        </div>
       </div>
 
       <div className="p-4 border-b border-border">
@@ -360,6 +413,17 @@ const StudySession = ({ userId }: StudySessionProps) => {
           ))}
         </div>
       </div>
+
+      {showVideoCall && activeSession && (
+        <div className="border-b border-border bg-black">
+          <iframe
+            ref={videoFrameRef}
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            src={`https://meet.jit.si/studysession-${activeSession}`}
+            className="w-full h-64"
+          />
+        </div>
+      )}
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
