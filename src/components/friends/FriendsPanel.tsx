@@ -73,9 +73,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
 
     const friendIds = friendships.map(f => f.friend_id);
     const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .in('id', friendIds);
+      .rpc('get_profiles_by_ids', { p_ids: friendIds });
 
     setFriends(profiles || []);
   };
@@ -99,9 +97,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
     if (received && received.length > 0) {
       const senderIds = received.map(r => r.sender_id);
       const { data: senderProfiles } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .in('id', senderIds);
+        .rpc('get_profiles_by_ids', { p_ids: senderIds });
 
       const receivedWithProfiles = received.map(req => ({
         ...req,
@@ -116,9 +112,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
     if (sent && sent.length > 0) {
       const receiverIds = sent.map(r => r.receiver_id);
       const { data: receiverProfiles } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .in('id', receiverIds);
+        .rpc('get_profiles_by_ids', { p_ids: receiverIds });
 
       const sentWithProfiles = sent.map(req => ({
         ...req,

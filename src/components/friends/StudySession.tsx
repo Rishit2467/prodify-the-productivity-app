@@ -114,12 +114,12 @@ const StudySession = ({ userId }: StudySessionProps) => {
   const checkActiveSession = async () => {
     const { data } = await supabase
       .from('study_session_participants')
-      .select('session_id, study_sessions(is_active)')
+      .select('session_id')
       .eq('user_id', userId)
       .eq('is_active', true)
       .maybeSingle();
 
-    if (data && data.study_sessions?.is_active) {
+    if (data?.session_id) {
       setActiveSession(data.session_id);
     }
   };
@@ -130,18 +130,27 @@ const StudySession = ({ userId }: StudySessionProps) => {
       return;
     }
 
+    // Always use the authenticated user's id to satisfy RLS
+    const { data: userRes } = await supabase.auth.getUser();
+    const authUserId = userRes?.user?.id;
+    if (!authUserId) {
+      toast.error("You must be logged in to create a session");
+      return;
+    }
+
     const { data: session, error: sessionError } = await supabase
       .from('study_sessions')
       .insert({
-        host_id: userId,
+        host_id: authUserId,
         name: sessionName,
         is_active: true
       })
-      .select()
+      .select('id')
       .single();
 
     if (sessionError || !session) {
-      toast.error("Failed to create session");
+      console.error('Create session error:', sessionError);
+      toast.error(sessionError?.message || 'Failed to create session');
       return;
     }
 
@@ -149,27 +158,27 @@ const StudySession = ({ userId }: StudySessionProps) => {
       .from('study_session_participants')
       .insert({
         session_id: session.id,
-        user_id: userId,
+        user_id: authUserId,
         is_active: true
       });
 
     if (participantError) {
-      toast.error("Failed to join session");
+      console.error('Join session error:', participantError);
+      toast.error(participantError.message || 'Failed to join session');
       return;
     }
 
-    // Invite friend if selected
+    // Invite friend if selected (may fail due to RLS; we ignore errors here)
     if (selectedFriend) {
       await inviteFriendToSession(session.id, selectedFriend);
     }
 
     setActiveSession(session.id);
-    setSessionName("");
-    setSelectedFriend("");
+    setSessionName('');
+    setSelectedFriend('');
     setShowCreateDialog(false);
-    toast.success("Study session created!");
+    toast.success('Study session created!');
   };
-
   const inviteFriendToSession = async (sessionId: string, friendId: string) => {
     const { error } = await supabase
       .from('study_session_participants')
@@ -215,9 +224,7 @@ const StudySession = ({ userId }: StudySessionProps) => {
     if (messages && messages.length > 0) {
       const userIds = [...new Set(messages.map(m => m.user_id))];
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .in('id', userIds);
+        .rpc('get_profiles_by_ids', { p_ids: userIds });
 
       const messagesWithProfiles = messages.map(msg => ({
         ...msg,
@@ -241,9 +248,7 @@ const StudySession = ({ userId }: StudySessionProps) => {
     if (participants && participants.length > 0) {
       const userIds = participants.map(p => p.user_id);
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .in('id', userIds);
+        .rpc('get_profiles_by_ids', { p_ids: userIds });
 
       const participantsWithProfiles = participants.map(part => ({
         ...part,

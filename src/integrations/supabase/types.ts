@@ -392,6 +392,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_profiles_by_ids: {
+        Args: { p_ids: string[] }
+        Returns: {
+          avatar_url: string
+          id: string
+          username: string
+        }[]
+      }
       get_user_id_by_username: {
         Args: { p_username: string }
         Returns: string
