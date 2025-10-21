@@ -392,6 +392,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_friendship: {
+        Args: { p_user1_id: string; p_user2_id: string }
+        Returns: undefined
+      }
       get_profiles_by_ids: {
         Args: { p_ids: string[] }
         Returns: {

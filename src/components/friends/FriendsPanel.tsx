@@ -208,16 +208,14 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
 
       if (updateError) throw updateError;
 
-      // Create bidirectional friendships
-      const { error: friendship1Error } = await supabase
-        .from('friendships')
-        .insert({ user_id: userId, friend_id: senderId });
+      // Create bidirectional friendships using secure RPC function
+      const { error: friendshipError } = await supabase
+        .rpc('create_friendship', {
+          p_user1_id: userId,
+          p_user2_id: senderId
+        });
 
-      const { error: friendship2Error } = await supabase
-        .from('friendships')
-        .insert({ user_id: senderId, friend_id: userId });
-
-      if (friendship1Error || friendship2Error) throw friendship1Error || friendship2Error;
+      if (friendshipError) throw friendshipError;
 
       toast.success("Friend request accepted!");
       fetchFriends();
