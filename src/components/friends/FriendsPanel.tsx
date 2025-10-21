@@ -346,7 +346,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
                     key={request.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-card border border-border"
                   >
-                    <span className="font-medium">{request.sender?.username}</span>
+                    <span className="font-medium text-foreground">{request.sender?.username}</span>
                     <div className="flex gap-2">
                       <Button
                         variant="default"
@@ -383,7 +383,7 @@ const FriendsPanel = ({ userId }: FriendsPanelProps) => {
                     key={request.id}
                     className="flex items-center justify-between p-3 rounded-lg bg-card border border-border"
                   >
-                    <span className="font-medium">{request.receiver?.username}</span>
+                    <span className="font-medium text-foreground">{request.receiver?.username}</span>
                     <Badge variant="secondary">Pending</Badge>
                   </div>
                 ))}

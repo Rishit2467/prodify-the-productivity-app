@@ -117,7 +117,7 @@ const StudySession = ({ userId }: StudySessionProps) => {
       .select('session_id, study_sessions(is_active)')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (data && data.study_sessions?.is_active) {
       setActiveSession(data.session_id);
