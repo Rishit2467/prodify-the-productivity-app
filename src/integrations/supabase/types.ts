@@ -404,6 +404,14 @@ export type Database = {
         Args: { p_username: string }
         Returns: string
       }
+      is_session_host: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_user_in_session: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: boolean
+      }
       search_users: {
         Args: { p_query: string }
         Returns: {
