@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Video, MessageSquare, LogOut, Send, Users, UserPlus, VideoOff } from "lucide-react";
+import { Video, MessageSquare, LogOut, Send, Users, UserPlus, VideoOff, Share2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -206,6 +206,19 @@ const StudySession = ({ userId }: StudySessionProps) => {
     setShowInviteDialog(false);
   };
 
+  const handleShareSession = async () => {
+    if (!activeSession) return;
+    
+    const shareUrl = `${window.location.origin}/join-session/${activeSession}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Session link copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy link");
+    }
+  };
+
   const leaveSession = async () => {
     if (!activeSession) return;
 
@@ -358,18 +371,19 @@ const StudySession = ({ userId }: StudySessionProps) => {
             </span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowVideoCall(!showVideoCall)}
+            title="Toggle video call"
           >
             {showVideoCall ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
           </Button>
           
           <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" title="Invite friend">
                 <UserPlus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -396,6 +410,15 @@ const StudySession = ({ userId }: StudySessionProps) => {
               </div>
             </DialogContent>
           </Dialog>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareSession}
+            title="Share session link"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
           
           <Button variant="destructive" size="sm" onClick={leaveSession}>
             <LogOut className="h-4 w-4 mr-2" />

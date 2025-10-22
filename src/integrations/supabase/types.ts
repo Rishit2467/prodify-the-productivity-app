@@ -343,6 +343,7 @@ export type Database = {
           last_activity_date: string | null
           level: number
           longest_streak: number
+          purchased_icons: string[] | null
           total_focus_time: number
           total_tasks_completed: number
           updated_at: string
@@ -357,6 +358,7 @@ export type Database = {
           last_activity_date?: string | null
           level?: number
           longest_streak?: number
+          purchased_icons?: string[] | null
           total_focus_time?: number
           total_tasks_completed?: number
           updated_at?: string
@@ -371,6 +373,7 @@ export type Database = {
           last_activity_date?: string | null
           level?: number
           longest_streak?: number
+          purchased_icons?: string[] | null
           total_focus_time?: number
           total_tasks_completed?: number
           updated_at?: string
@@ -404,10 +407,7 @@ export type Database = {
           username: string
         }[]
       }
-      get_user_id_by_username: {
-        Args: { p_username: string }
-        Returns: string
-      }
+      get_user_id_by_username: { Args: { p_username: string }; Returns: string }
       is_session_host: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: boolean
