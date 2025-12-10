@@ -15,6 +15,7 @@ import FriendsPanel from "@/components/friends/FriendsPanel";
 import StudySession from "@/components/friends/StudySession";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import FocusStore from "@/components/dashboard/FocusStore";
+import StudyVideos from "@/components/dashboard/StudyVideos";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
@@ -111,10 +112,11 @@ const Dashboard = () => {
         {/* Right Sidebar with Tabs */}
         <aside className="w-96 border-l border-border bg-card/30 backdrop-blur flex flex-col">
           <Tabs defaultValue="ai" className="flex-1 flex flex-col">
-            <TabsList className="m-4 grid grid-cols-5">
+            <TabsList className="m-4 grid grid-cols-6">
               <TabsTrigger value="ai">AI</TabsTrigger>
               <TabsTrigger value="friends">Friends</TabsTrigger>
               <TabsTrigger value="study">Study</TabsTrigger>
+              <TabsTrigger value="videos">Videos</TabsTrigger>
               <TabsTrigger value="store">Store</TabsTrigger>
               <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
@@ -129,6 +131,10 @@ const Dashboard = () => {
             
             <TabsContent value="study" className="flex-1 mt-0 overflow-hidden">
               <StudySession userId={user?.id || ""} />
+            </TabsContent>
+
+            <TabsContent value="videos" className="flex-1 mt-0 overflow-hidden">
+              <StudyVideos />
             </TabsContent>
 
             <TabsContent value="store" className="flex-1 mt-0 overflow-hidden">
