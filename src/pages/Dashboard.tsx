@@ -16,6 +16,7 @@ import StudySession from "@/components/friends/StudySession";
 import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import FocusStore from "@/components/dashboard/FocusStore";
 import StudyVideos from "@/components/dashboard/StudyVideos";
+import IoTWorkshop from "@/components/dashboard/IoTWorkshop";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
@@ -112,13 +113,14 @@ const Dashboard = () => {
         {/* Right Sidebar with Tabs */}
         <aside className="w-96 border-l border-border bg-card/30 backdrop-blur flex flex-col">
           <Tabs defaultValue="ai" className="flex-1 flex flex-col">
-            <TabsList className="m-4 grid grid-cols-6">
-              <TabsTrigger value="ai">AI</TabsTrigger>
-              <TabsTrigger value="friends">Friends</TabsTrigger>
-              <TabsTrigger value="study">Study</TabsTrigger>
-              <TabsTrigger value="videos">Videos</TabsTrigger>
-              <TabsTrigger value="store">Store</TabsTrigger>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsList className="m-4 grid grid-cols-7">
+              <TabsTrigger value="ai" className="text-xs">AI</TabsTrigger>
+              <TabsTrigger value="friends" className="text-xs">Friends</TabsTrigger>
+              <TabsTrigger value="study" className="text-xs">Study</TabsTrigger>
+              <TabsTrigger value="videos" className="text-xs">Videos</TabsTrigger>
+              <TabsTrigger value="iot" className="text-xs">IoT Lab</TabsTrigger>
+              <TabsTrigger value="store" className="text-xs">Store</TabsTrigger>
+              <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ai" className="flex-1 mt-0 overflow-hidden">
@@ -135,6 +137,10 @@ const Dashboard = () => {
 
             <TabsContent value="videos" className="flex-1 mt-0 overflow-hidden">
               <StudyVideos />
+            </TabsContent>
+
+            <TabsContent value="iot" className="flex-1 mt-0 overflow-hidden">
+              <IoTWorkshop />
             </TabsContent>
 
             <TabsContent value="store" className="flex-1 mt-0 overflow-hidden">
